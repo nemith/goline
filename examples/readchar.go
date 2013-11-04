@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/nemith/go-goline/goline"
-	"goline"
 	"syscall"
 )
 
