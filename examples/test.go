@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/nemith/go-goline/goline"
 )
@@ -14,10 +13,9 @@ func main() {
 			panic(err)
 		}
 
-		fmt.Printf("\nGot: '%s' (%d)\n", data, gl.Len)
+		fmt.Printf("\nGot: '%s' (%d)\n", data, len(data))
 
-		if bytes.Equal(data[:gl.Len], []byte("exit")) ||
-			bytes.Equal(data[:gl.Len], []byte("quit")) {
+		if data == "exit" || data == "quit" {
 			fmt.Printf("Exiting.\n")
 			return
 		}

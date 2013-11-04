@@ -1,9 +1,11 @@
 package goline
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"syscall"
+	"unicode/utf8"
 )
 
 const (
@@ -20,16 +22,13 @@ func (p StringPrompt) Prompt() string {
 	return string(p)
 }
 
-//type CustomFunction func()
-
 type GoLine struct {
 	tty        *Tty
 	prompter   Prompter
 	LastPrompt string
-	CurLine    []byte
+	CurLine    []rune
 	Pos        int
 	Len        int
-	//	map[byte]
 }
 
 func NewGoLine(p Prompter) *GoLine {
@@ -44,8 +43,8 @@ func (l *GoLine) RefreshLine() {
 	l.tty.Write([]byte("\x1b[0G"))
 
 	// Write the prompt and the current buffer content
-	l.tty.Write([]byte(l.LastPrompt))
-	l.tty.Write(l.CurLine[:l.Len])
+	l.tty.WriteString(l.LastPrompt)
+	l.tty.WriteString(string(l.CurLine[:l.Len]))
 
 	// Erase to right
 	l.tty.Write([]byte("\x1b[0K"))
@@ -55,9 +54,9 @@ func (l *GoLine) RefreshLine() {
 	l.tty.Write([]byte(fmt.Sprintf("\x1b[0G\x1b[%dC", pos)))
 }
 
-func (l *GoLine) Insert(c byte) {
+func (l *GoLine) Insert(r rune) {
 	if l.Len == l.Pos {
-		l.CurLine[l.Pos] = c
+		l.CurLine[l.Pos] = r
 		l.Pos++
 		l.Len++
 		//	l.tty.Write([]byte{c})
@@ -65,7 +64,7 @@ func (l *GoLine) Insert(c byte) {
 	} else {
 		n := len(l.CurLine)
 		copy(l.CurLine[l.Pos+1:n], l.CurLine[l.Pos:n])
-		l.CurLine[l.Pos] = c
+		l.CurLine[l.Pos] = r
 		l.Pos++
 		l.Len++
 		l.RefreshLine()
@@ -104,10 +103,10 @@ func (l *GoLine) ClearScreen() {
 	l.tty.WriteString("\x1b[H\x1b[2J")
 }
 
-func (l *GoLine) Line() ([]byte, error) {
+func (l *GoLine) Line() (string, error) {
 	// Write out the current prompt
 	l.LastPrompt = l.prompter.Prompt()
-	l.tty.Write([]byte(l.LastPrompt))
+	l.tty.WriteString(l.LastPrompt)
 
 	// Go into RawMode and leave after we are finished
 	l.tty.EnableRawMode()
@@ -115,17 +114,17 @@ func (l *GoLine) Line() ([]byte, error) {
 
 	l.Len = 0
 	l.Pos = 0
-	l.CurLine = make([]byte, MAX_LINE)
+	l.CurLine = make([]rune, MAX_LINE)
 
 	for {
 		c, _ := l.tty.ReadChar()
 
 		switch c {
 		case CHAR_ENTER:
-			return l.CurLine[:l.Len], nil
+			return string(l.CurLine[:l.Len]), nil
 		case CHAR_CTRLC:
 			// TODO: Identify this as a user escape.
-			return l.CurLine[:l.Len], errors.New("CTRL-C!")
+			return string(l.CurLine[:l.Len]), errors.New("CTRL-C!")
 		case CHAR_BACKSPACE, CHAR_CTRLH:
 			l.Backspace()
 		case CHAR_CTRLB:
@@ -133,7 +132,7 @@ func (l *GoLine) Line() ([]byte, error) {
 		case CHAR_CTRLF:
 			l.MoveRight()
 		case CHAR_CTRLU: // Delete whole line
-			l.CurLine = make([]byte, MAX_LINE)
+			l.CurLine = make([]rune, MAX_LINE)
 			l.Pos = 0
 			l.Len = 0
 			l.RefreshLine()
@@ -161,15 +160,31 @@ func (l *GoLine) Line() ([]byte, error) {
 			}
 
 			switch {
-			case bytes.Equal(chars, ESCAPE_RIGHT): // Right arrow
+			case bytes.Equal(chars, []byte(ESCAPE_RIGHT)): // Right arrow
 				l.MoveRight()
-			case bytes.Equal(chars, ESCAPE_LEFT): // Left arrow
+			case bytes.Equal(chars, []byte(ESCAPE_LEFT)): // Left arrow
 				l.MoveLeft()
 			default:
 				break
 			}
 		default:
-			l.Insert(c)
+			b := []byte{c}
+			switch {
+			case c < 0x80: // One byte utf8 character (ASCII)
+			case c < 0xe0: // Two byte utf8 character
+				char, _ := l.tty.ReadChar()
+				b = append(b, char)
+			case c < 0xf0: // Three byte utf8 character
+				chars, _ := l.tty.ReadChars(2)
+				b = append(b, chars...)
+			case c < 0xf8: // Four byte utf8 character
+				chars, _ := l.tty.ReadChars(3)
+				b = append(b, chars...)
+
+			}
+
+			r, _ := utf8.DecodeRune(b)
+			l.Insert(r)
 		}
 	}
 }
