@@ -1,4 +1,5 @@
 // +build linux
+
 package goline
 
 import "syscall"

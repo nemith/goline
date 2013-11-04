@@ -1,4 +1,5 @@
-// +build darwin
+// +build darwin freebsd netbsd openbsd
+
 package goline
 
 import "syscall"
