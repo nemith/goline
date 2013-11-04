@@ -5,8 +5,15 @@ import (
 	"github.com/nemith/go-goline/goline"
 )
 
+func helpHandler(l *goline.GoLine) {
+	fmt.Println("Help!")
+}
+
 func main() {
 	gl := goline.NewGoLine(goline.StringPrompt("prompt> "))
+
+	gl.AddHandler('?', helpHandler)
+
 	for {
 		data, err := gl.Line()
 		if err != nil {

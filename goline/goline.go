@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"syscall"
-	"unicode/utf8"
 )
 
 const (
@@ -30,14 +29,17 @@ func (p StringPrompt) Prompt() string {
 	return string(p)
 }
 
+type customHander func(*GoLine)
+
 // GoLine stores the current internal state of the Line operation
 type GoLine struct {
-	tty        *Tty
-	prompter   Prompter
-	LastPrompt string
-	CurLine    []rune
-	Pos        int
-	Len        int
+	tty           *Tty
+	prompter      Prompter
+	customHanders map[rune]customHander
+	LastPrompt    string
+	CurLine       []rune
+	Pos           int
+	Len           int
 }
 
 // Creates a new goline with the input set to STDIN and the prompt set to the
@@ -45,8 +47,9 @@ type GoLine struct {
 func NewGoLine(p Prompter) *GoLine {
 	tty, _ := NewTty(syscall.Stdin)
 	return &GoLine{
-		tty:      tty,
-		prompter: p}
+		tty:           tty,
+		customHanders: make(map[rune]customHander),
+		prompter:      p}
 }
 
 // Refreshes the current line by first moving the cursor to the left edge, then
@@ -144,9 +147,14 @@ func (l *GoLine) Line() (string, error) {
 	l.CurLine = make([]rune, MAX_LINE)
 
 	for {
-		c, _ := l.tty.ReadChar()
+		r, _ := l.tty.ReadRune()
 
-		switch c {
+		if f, found := l.customHanders[r]; found {
+			f(l)
+			continue
+		}
+
+		switch r {
 		case CHAR_ENTER:
 			return string(l.CurLine[:l.Len]), nil
 		case CHAR_CTRLC:
@@ -185,7 +193,6 @@ func (l *GoLine) Line() (string, error) {
 			if err != nil {
 				break
 			}
-
 			switch {
 			case bytes.Equal(chars, []byte(ESCAPE_RIGHT)): // Right arrow
 				l.MoveRight()
@@ -195,25 +202,25 @@ func (l *GoLine) Line() (string, error) {
 				break
 			}
 		default:
-			b := []byte{c}
-			switch {
-			case c < 0x80: // One byte utf8 character (ASCII)
-			case c < 0xe0: // Two byte utf8 character
-				char, _ := l.tty.ReadChar()
-				b = append(b, char)
-			case c < 0xf0: // Three byte utf8 character
-				chars, _ := l.tty.ReadChars(2)
-				b = append(b, chars...)
-			case c < 0xf8: // Four byte utf8 character
-				chars, _ := l.tty.ReadChars(3)
-				b = append(b, chars...)
-
-			}
-
-			r, _ := utf8.DecodeRune(b)
 			l.Insert(r)
 		}
 	}
 	// We should never get here
 	panic("Unproccessed input")
+}
+
+// Add a custom handler function to be invoked when rune r is encontered.
+//
+// Function is passed a pointer to the current GoLine to be able to read or
+// modify the current buffer, cursor position, or length
+//
+// Custom handlers are evaulated before built-in functions which allows you to
+// override built-in functionality
+func (l *GoLine) AddHandler(r rune, f customHander) {
+	l.customHanders[r] = f
+}
+
+// Removes a handler with rune of r
+func (l *GoLine) RemoveHanlder(r rune) {
+	delete(l.customHanders, r)
 }

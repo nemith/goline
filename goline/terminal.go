@@ -1,7 +1,9 @@
 package goline
 
 import (
+	"errors"
 	"syscall"
+	"unicode/utf8"
 	"unsafe"
 )
 
@@ -140,6 +142,45 @@ func (t *Tty) Write(p []byte) error {
 func (t *Tty) WriteString(s string) error {
 	_, err := syscall.Write(t.fd, []byte(s))
 	return err
+}
+
+func (t *Tty) ReadRune() (rune, error) {
+	char, err := t.ReadChar()
+	if err != nil {
+		return 0, err
+	}
+
+	b := []byte{char}
+
+	switch {
+	case b[0] < 0x80: // One byte utf8 character (ASCII)
+	case b[0] < 0xe0: // Two byte utf8 character
+		char, err := t.ReadChar()
+		if err != nil {
+			return 0, err
+		}
+		b = append(b, char)
+	case b[0] < 0xf0: // Three byte utf8 character
+		chars, err := t.ReadChars(2)
+		if err != nil {
+			return 0, err
+		}
+		b = append(b, chars...)
+	case b[0] < 0xf8: // Four byte utf8 character
+		chars, err := t.ReadChars(3)
+		if err != nil {
+			return 0, err
+		}
+		b = append(b, chars...)
+
+	}
+
+	r, _ := utf8.DecodeRune(b)
+	if r == utf8.RuneError {
+		return 0, errors.New("UTF8 Decode Error")
+	}
+
+	return r, nil
 }
 
 // Read a single character and return it
