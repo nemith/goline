@@ -160,10 +160,10 @@ func (l *GoLine) Line() ([]byte, error) {
 				break
 			}
 
-			switch string(chars) {
-			case "[C": // Right arrow
+			switch {
+			case bytes.Equal(chars, ESCAPE_RIGHT): // Right arrow
 				l.MoveRight()
-			case "[D": // Left arrow
+			case bytes.Equal(chars, ESCAPE_LEFT): // Left arrow
 				l.MoveLeft()
 			default:
 				break

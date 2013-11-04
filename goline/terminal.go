@@ -24,7 +24,9 @@ const (
 
 // Commonly used escape codes with out the escape character
 const (
-	ESCAPE_UP = "[A"
+	ESCAPE_UP    = "[A"
+	ESCAPE_RIGHT = "[C"
+	ESCAPE_LEFT  = "[D"
 )
 
 // Get the current Termios via syscall for the given terminal at the file
