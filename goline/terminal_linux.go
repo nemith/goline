@@ -4,5 +4,8 @@ package goline
 
 import "syscall"
 
-const ioctlReadTermios = syscall.TCGETS
-const ioctlWriteTermios = syscall.TCSETS
+// Read and Write syscall operations on Linux platforms
+const (
+	ioctlReadTermios  = syscall.TCGETS
+	ioctlWriteTermios = syscall.TCSETS
+)

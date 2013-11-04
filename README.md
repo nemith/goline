@@ -21,6 +21,10 @@ Features
 * Support for custom RPCs
 * Independant of XML library.  Free to choose encoding/xml or another third party library to parse the results.
 
+Documentation
+-------------
+Latest documentation can always be found at [http://godoc.org/github.com/nemith/go-goline/goline](http://godoc.org/github.com/nemith/go-goline/goline)
+
 Install
 -------
 
