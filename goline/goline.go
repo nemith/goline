@@ -12,6 +12,8 @@ const (
 	MAX_LINE = 4096
 )
 
+var UserTerminatedError = errors.New("User terminated.")
+
 type Prompter interface {
 	Prompt() string
 }
@@ -124,7 +126,7 @@ func (l *GoLine) Line() (string, error) {
 			return string(l.CurLine[:l.Len]), nil
 		case CHAR_CTRLC:
 			// TODO: Identify this as a user escape.
-			return string(l.CurLine[:l.Len]), errors.New("CTRL-C!")
+			return string(l.CurLine[:l.Len]), UserTerminatedError
 		case CHAR_BACKSPACE, CHAR_CTRLH:
 			l.Backspace()
 		case CHAR_CTRLB:
