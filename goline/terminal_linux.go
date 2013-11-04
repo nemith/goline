@@ -1,6 +1,5 @@
 // +build linux
-
-package terminal
+package goline
 
 import "syscall"
 
