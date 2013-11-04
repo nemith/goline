@@ -126,7 +126,7 @@ func (l *GoLine) Line() ([]byte, error) {
 		case CHAR_CTRLC:
 			// TODO: Identify this as a user escape.
 			return l.CurLine[:l.Len], errors.New("CTRL-C!")
-		case CHAR_Backspace, CHAR_CTRLH:
+		case CHAR_BACKSPACE, CHAR_CTRLH:
 			l.Backspace()
 		case CHAR_CTRLB:
 			l.MoveLeft()
