@@ -189,4 +189,6 @@ func (l *GoLine) Line() (string, error) {
 			l.Insert(r)
 		}
 	}
+	// We should never get here
+	panic("Unproccessed input")
 }
