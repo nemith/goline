@@ -1,4 +1,4 @@
-netconf
+goline
 =======
 
 [![Build Status](https://travis-ci.org/nemith/go-goline.png)](https://travis-ci.org/nemith/go-goline)
