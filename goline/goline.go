@@ -1,7 +1,6 @@
 package goline
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"syscall"
@@ -29,27 +28,46 @@ func (p StringPrompt) Prompt() string {
 	return string(p)
 }
 
-type customHander func(*GoLine)
+type Handler func(*GoLine) (bool, error)
 
 // GoLine stores the current internal state of the Line operation
 type GoLine struct {
-	tty           *Tty
-	prompter      Prompter
-	customHanders map[rune]customHander
-	LastPrompt    string
-	CurLine       []rune
-	Pos           int
-	Len           int
+	tty            *Tty
+	prompter       Prompter
+	Handlers       map[rune]Handler
+	DefaultHandler Handler
+	LastPrompt     string
+	CurLine        []rune
+	Pos            int
+	Len            int
 }
 
 // Creates a new goline with the input set to STDIN and the prompt set to the
 // prompter p
 func NewGoLine(p Prompter) *GoLine {
 	tty, _ := NewTty(syscall.Stdin)
-	return &GoLine{
-		tty:           tty,
-		customHanders: make(map[rune]customHander),
-		prompter:      p}
+	l := &GoLine{
+		tty:      tty,
+		Handlers: make(map[rune]Handler),
+		prompter: p}
+
+	l.AddHandler(CHAR_ENTER, Finish)
+	l.AddHandler(CHAR_CTRLC, UserTerminated)
+	l.AddHandler(CHAR_BACKSPACE, Backspace)
+	l.AddHandler(CHAR_CTRLH, Backspace)
+
+	// Movement
+	l.AddHandler(CHAR_CTRLB, MoveLeft)
+	l.AddHandler(CHAR_CTRLF, MoveRight)
+	l.AddHandler(CHAR_CTRLA, MoveStartofLine)
+	l.AddHandler(CHAR_CTRLE, MoveEndofLine)
+
+	//Edit
+	l.AddHandler(CHAR_CTRLL, ClearScreen)
+	l.AddHandler(CHAR_CTRLU, DeleteLine)
+
+	//	l.DefaultHandler = DefaultHandler
+	return l
 }
 
 // Refreshes the current line by first moving the cursor to the left edge, then
@@ -86,45 +104,28 @@ func (l *GoLine) Insert(r rune) {
 		l.CurLine[l.Pos] = r
 		l.Pos++
 		l.Len++
-		l.RefreshLine()
-	}
-}
-
-// Perform a backspace (if possible) at the current position
-func (l *GoLine) Backspace() {
-	if l.Len > 0 && l.Pos > 0 {
-		l.CurLine = append(l.CurLine[:l.Pos-1], l.CurLine[l.Pos:]...)
-		l.Len--
-		l.Pos--
-		l.CurLine[l.Len] = 0
-		l.RefreshLine()
-	}
-}
-
-// Deletes the last word seperated by a space character
-func (l *GoLine) DeleteLastWord() {
-	//TODO: Implement
-}
-
-// Moves the cusor position one character to the left
-func (l *GoLine) MoveLeft() {
-	if l.Pos > 0 {
-		l.Pos--
-		l.RefreshLine()
-	}
-}
-
-// Moves the cusor position one character to the right
-func (l *GoLine) MoveRight() {
-	if l.Pos != l.Len {
-		l.Pos++
-		l.RefreshLine()
 	}
 }
 
 // Clears the entire screen
 func (l *GoLine) ClearScreen() {
 	l.tty.WriteString("\x1b[H\x1b[2J")
+}
+
+// Add a custom handler function to be invoked when rune r is encontered.
+//
+// Function is passed a pointer to the current GoLine to be able to read or
+// modify the current buffer, cursor position, or length
+//
+// Custom handlers are evaulated before built-in functions which allows you to
+// override built-in functionality
+func (l *GoLine) AddHandler(r rune, f Handler) {
+	l.Handlers[r] = f
+}
+
+// Removes a handler with rune of r
+func (l *GoLine) RemoveHanlder(r rune) {
+	delete(l.Handlers, r)
 }
 
 // Print the current prompt and handle each character as it received from
@@ -149,78 +150,19 @@ func (l *GoLine) Line() (string, error) {
 	for {
 		r, _ := l.tty.ReadRune()
 
-		if f, found := l.customHanders[r]; found {
-			f(l)
-			continue
-		}
+		if f, found := l.Handlers[r]; found {
+			l.tty.DisableRawMode()
+			stop, err := f(l)
+			l.tty.EnableRawMode()
 
-		switch r {
-		case CHAR_ENTER:
-			return string(l.CurLine[:l.Len]), nil
-		case CHAR_CTRLC:
-			// TODO: Identify this as a user escape.
-			return string(l.CurLine[:l.Len]), UserTerminatedError
-		case CHAR_BACKSPACE, CHAR_CTRLH:
-			l.Backspace()
-		case CHAR_CTRLB:
-			l.MoveLeft()
-		case CHAR_CTRLF:
-			l.MoveRight()
-		case CHAR_CTRLU: // Delete whole line
-			l.CurLine = make([]rune, MAX_LINE)
-			l.Pos = 0
-			l.Len = 0
-			l.RefreshLine()
-		case CHAR_CTRLK: // Delete from current position to the end of the line
-			copy(l.CurLine, l.CurLine[:l.Pos])
-			l.Len = l.Pos
-			l.RefreshLine()
-		case CHAR_CTRLA: // Go to the start of line
-			l.Pos = 0
-			l.RefreshLine()
-		case CHAR_CTRLE: // Go to the end of line
-			l.Pos = l.Len
-			l.RefreshLine()
-		case CHAR_CTRLL: // Clear the screen
-			l.ClearScreen()
-			l.RefreshLine()
-		case CHAR_CTRLW: // Delete Previous Word
-			l.DeleteLastWord()
-			l.RefreshLine()
-		case CHAR_ESCAPE:
-			// Recevied an escape sequence.  Read the next two characters
-			chars, err := l.tty.ReadChars(2)
-			if err != nil {
-				break
+			if stop || err != nil {
+				return string(l.CurLine[:l.Len]), err
 			}
-			switch {
-			case bytes.Equal(chars, []byte(ESCAPE_RIGHT)): // Right arrow
-				l.MoveRight()
-			case bytes.Equal(chars, []byte(ESCAPE_LEFT)): // Left arrow
-				l.MoveLeft()
-			default:
-				break
-			}
-		default:
+		} else {
 			l.Insert(r)
 		}
+		l.RefreshLine()
 	}
 	// We should never get here
 	panic("Unproccessed input")
-}
-
-// Add a custom handler function to be invoked when rune r is encontered.
-//
-// Function is passed a pointer to the current GoLine to be able to read or
-// modify the current buffer, cursor position, or length
-//
-// Custom handlers are evaulated before built-in functions which allows you to
-// override built-in functionality
-func (l *GoLine) AddHandler(r rune, f customHander) {
-	l.customHanders[r] = f
-}
-
-// Removes a handler with rune of r
-func (l *GoLine) RemoveHanlder(r rune) {
-	delete(l.customHanders, r)
 }

@@ -5,8 +5,9 @@ import (
 	"github.com/nemith/go-goline/goline"
 )
 
-func helpHandler(l *goline.GoLine) {
-	fmt.Println("Help!")
+func helpHandler(l *goline.GoLine) (bool, error) {
+	fmt.Println("\nHelp!")
+	return false, nil
 }
 
 func main() {
