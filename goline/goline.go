@@ -147,7 +147,7 @@ func (l *GoLine) AddHandler(t interface{}, f Handler) {
 }
 
 // Removes a handler with rune of r
-func (l *GoLine) RemoveHanlder(t interface{}) {
+func (l *GoLine) RemoveHandler(t interface{}) {
 	switch t := t.(type) {
 	case byte, rune:
 		delete(l.runeHandlers, t.(rune))
