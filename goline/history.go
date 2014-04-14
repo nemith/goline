@@ -1,6 +1,6 @@
 package goline
 
-import "fmt"
+import "strings"
 
 type History struct {
 	history  [][]rune
@@ -30,9 +30,10 @@ func (h *History) NextHistory(l *GoLine) (bool, error) {
 }
 
 func (h *History) AddLine(line []rune) {
-	h.history = append(h.history, line)
-	h.curIndex = len(h.history)
-	fmt.Println(len(h.history))
+	if strings.Trim(string(line), " ") != "" {
+		h.history = append(h.history, line)
+		h.curIndex = len(h.history)
+	}
 }
 
 func (h *History) HistoryFinish(l *GoLine) (bool, error) {
