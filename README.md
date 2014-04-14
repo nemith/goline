@@ -1,7 +1,7 @@
 goline
 =======
 
-[![Build Status](https://travis-ci.org/nemith/go-goline.png)](https://travis-ci.org/nemith/go-goline)
+[![Build Status](https://travis-ci.org/nemith/goline.png)](https://travis-ci.org/nemith/goline)
 
 Simple implemenation of a readline like facility that is heavly based on the C library [linenoise](https://github.com/antirez/linenoise).  Uses syscalls directly from Golang to implment the low level terminal functions and doesn't wrap any existing C library.  BSD and Linux support currently.  No Windows support.
 
@@ -17,7 +17,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/nemith/go-goline/goline"
+	"github.com/nemith/goline"
 )
 
 func helpHandler(l *goline.GoLine) (bool, error) {
@@ -54,12 +54,12 @@ func main() {
 
 Documentation
 -------------
-Latest documentation can always be found at [http://godoc.org/github.com/nemith/go-goline/goline](http://godoc.org/github.com/nemith/go-goline/goline)
+Latest documentation can always be found at [http://godoc.org/github.com/nemith/goline](http://godoc.org/github.com/nemith/goline)
 
 Install
 -------
 
-    go get github.com/nemith/go-goline/goline
+    go get github.com/nemith/goline
     
 License
 -------

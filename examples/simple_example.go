@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/nemith/go-goline/goline"
+	"github.com/nemith/goline"
 )
 
 func helpHandler(l *goline.GoLine) (bool, error) {
