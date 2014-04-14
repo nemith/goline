@@ -74,6 +74,9 @@ func NewGoLine(p Prompter) *GoLine {
 	l.AddHandler(CHAR_CTRLU, DeleteLine)
 	l.AddHandler(CHAR_CTRLK, DeleteRestofLine)
 
+	l.AddHandler(ESCAPE_ALT_SHIFT_BACKSPACE, DeleteLastWord)
+	l.AddHandler(CHAR_CTRLW, DeleteLastWord)
+
 	//	l.DefaultHandler = DefaultHandler
 	return l
 }

@@ -45,6 +45,18 @@ func DeleteRestofLine(l *GoLine) (bool, error) {
 	return false, nil
 }
 
+func DeleteLastWord(l *GoLine) (bool, error) {
+	for i := l.Position - 1; i > 0; i-- {
+		if l.CurLine[i-1] == ' ' {
+			copy(l.CurLine, l.CurLine[:i])
+			l.Len = i
+			l.Position = i
+			return false, nil
+		}
+	}
+	return DeleteLine(l)
+}
+
 func MoveStartofLine(l *GoLine) (bool, error) {
 	l.Position = 0
 	return false, nil
