@@ -6,13 +6,51 @@ goline
 Simple implemenation of a readline like facility that is heavly based on the C library [linenoise](https://github.com/antirez/linenoise).  Uses syscalls directly from Golang to implment the low level terminal functions and doesn't wrap any existing C library.  BSD and Linux support currently.  No Windows support.
 
 Currently only does simple line editing.  Upcoming versions will include:
- * Custom key bindings
- * History
  * Completion
 
-Very alpha quality right now.  API _will_ change.
+Very alpha quality right now.  API will probably change and evolve.
 
-See examples folder for examples API implementations
+Sample
+------
+```go
+package main
+
+import (
+	"fmt"
+	"github.com/nemith/go-goline/goline"
+)
+
+func helpHandler(l *goline.GoLine) (bool, error) {
+	fmt.Println("\nHelp!")
+	return false, nil
+}
+
+func main() {
+	gl := goline.NewGoLine(goline.StringPrompt("prompt> "))
+
+	gl.AddHandler('?', helpHandler)
+
+	for {
+		data, err := gl.Line()
+		if err != nil {
+			if err == goline.UserTerminatedError {
+				fmt.Println("\nUser terminated.")
+				return
+			} else {
+				panic(err)
+			}
+		}
+
+		fmt.Printf("\nGot: '%s' (%d)\n", data, len(data))
+
+		if data == "exit" || data == "quit" {
+			fmt.Println("Exiting.")
+			return
+		}
+
+	}
+}
+```
 
 Documentation
 -------------
@@ -25,6 +63,7 @@ Install
     
 License
 -------
+```
 (BSD 2)
 
 Copyright © 2013, Brandon Bennett
@@ -44,6 +83,7 @@ Redistribution and use in source and binary forms, with or without modification,
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 The views and conclusions contained in the software and documentation are those of the authors and should not be interpreted as representing official policies, either expressed or implied.
+```
 
 Authors and Contributors
 ------------------------
