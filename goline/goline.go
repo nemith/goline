@@ -72,6 +72,7 @@ func NewGoLine(p Prompter) *GoLine {
 	//Edit
 	l.AddHandler(CHAR_CTRLL, ClearScreen)
 	l.AddHandler(CHAR_CTRLU, DeleteLine)
+	l.AddHandler(CHAR_CTRLK, DeleteRestofLine)
 
 	//	l.DefaultHandler = DefaultHandler
 	return l
