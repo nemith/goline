@@ -60,24 +60,25 @@ func NewGoLine(p Prompter) *GoLine {
 
 	// Movement
 	l.AddHandler(CHAR_CTRLB, MoveLeft)
-	l.AddHandler(CHAR_CTRLF, MoveRight)
-	l.AddHandler(CHAR_CTRLA, MoveStartofLine)
-	l.AddHandler(CHAR_CTRLE, MoveEndofLine)
-
 	l.AddHandler(ESCAPE_LEFT, MoveLeft)
+	l.AddHandler(CHAR_CTRLF, MoveRight)
 	l.AddHandler(ESCAPE_RIGHT, MoveRight)
+	l.AddHandler(CHAR_CTRLA, MoveStartofLine)
 	l.AddHandler(ESCAPE_HOME, MoveStartofLine)
+	l.AddHandler(CHAR_CTRLE, MoveEndofLine)
 	l.AddHandler(ESCAPE_END, MoveEndofLine)
+	l.AddHandler(ESCAPE_B, MoveBackOneWord)
+	l.AddHandler(ESCAPE_F, MoveForwardOneWord)
 
 	//Edit
 	l.AddHandler(CHAR_CTRLL, ClearScreen)
 	l.AddHandler(CHAR_CTRLU, DeleteLine)
 	l.AddHandler(CHAR_CTRLK, DeleteRestofLine)
-
-	l.AddHandler(CHAR_CTRLT, SwapWithPreviousChar)
-
-	l.AddHandler(ESCAPE_ALT_SHIFT_BACKSPACE, DeleteLastWord)
+	l.AddHandler(ESCAPE_BACKSPACE, DeleteLastWord)
 	l.AddHandler(CHAR_CTRLW, DeleteLastWord)
+	l.AddHandler(ESCAPE_D, DeleteNextWord)
+	l.AddHandler(CHAR_CTRLD, DeleteCurrentChar)
+	l.AddHandler(CHAR_CTRLT, SwapWithPreviousChar)
 
 	SetupHistory(l)
 

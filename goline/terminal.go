@@ -12,6 +12,7 @@ const (
 	CHAR_CTRLA     rune = 1
 	CHAR_CTRLB     rune = 2
 	CHAR_CTRLC     rune = 3
+	CHAR_CTRLD     rune = 4
 	CHAR_CTRLE     rune = 5
 	CHAR_CTRLF     rune = 6
 	CHAR_CTRLH     rune = 8
@@ -31,13 +32,16 @@ type escapeCode string
 
 // Commonly used escape codes without the escape character
 const (
-	ESCAPE_UP                  escapeCode = "[A"
-	ESCAPE_DOWN                escapeCode = "[B"
-	ESCAPE_RIGHT               escapeCode = "[C"
-	ESCAPE_LEFT                escapeCode = "[D"
-	ESCAPE_END                 escapeCode = "[F"
-	ESCAPE_HOME                escapeCode = "[H"
-	ESCAPE_ALT_SHIFT_BACKSPACE escapeCode = "\x7F\x00"
+	ESCAPE_UP        escapeCode = "[A"
+	ESCAPE_DOWN      escapeCode = "[B"
+	ESCAPE_RIGHT     escapeCode = "[C"
+	ESCAPE_LEFT      escapeCode = "[D"
+	ESCAPE_END       escapeCode = "[F"
+	ESCAPE_HOME      escapeCode = "[H"
+	ESCAPE_B         escapeCode = "b\x00"
+	ESCAPE_D         escapeCode = "d\x00"
+	ESCAPE_F         escapeCode = "f\x00"
+	ESCAPE_BACKSPACE escapeCode = "\x7F\x00"
 )
 
 // Get the current Termios via syscall for the given terminal at the file

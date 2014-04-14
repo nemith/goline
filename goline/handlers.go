@@ -1,5 +1,25 @@
 package goline
 
+func findLastWord(t []rune, start int) int {
+	for start > 0 && t[start-1] == ' ' {
+		start--
+	}
+	for start > 0 && t[start-1] != ' ' {
+		start--
+	}
+	return start
+}
+
+func findNextWord(t []rune, end, max int) int {
+	for end < max && t[end] == ' ' {
+		end++
+	}
+	for end < max && t[end] != ' ' {
+		end++
+	}
+	return end
+}
+
 func Finish(l *GoLine) (bool, error) {
 	return true, nil
 }
@@ -15,6 +35,16 @@ func Backspace(l *GoLine) (bool, error) {
 		l.Position--
 		l.CurLine[l.Len] = 0
 	}
+	return false, nil
+}
+
+func MoveBackOneWord(l *GoLine) (bool, error) {
+	l.Position = findLastWord(l.CurLine, l.Position)
+	return false, nil
+}
+
+func MoveForwardOneWord(l *GoLine) (bool, error) {
+	l.Position = findNextWord(l.CurLine, l.Position, l.Len)
 	return false, nil
 }
 
@@ -46,15 +76,26 @@ func DeleteRestofLine(l *GoLine) (bool, error) {
 }
 
 func DeleteLastWord(l *GoLine) (bool, error) {
-	for i := l.Position - 1; i > 0; i-- {
-		if l.CurLine[i-1] == ' ' {
-			copy(l.CurLine, l.CurLine[:i])
-			l.Len = i
-			l.Position = i
-			return false, nil
-		}
+	prev_position := l.Position
+	l.Position = findLastWord(l.CurLine, l.Position)
+	copy(l.CurLine, append(l.CurLine[:l.Position], l.CurLine[prev_position:l.Len]...))
+	l.Len -= prev_position - l.Position
+	return false, nil
+}
+
+func DeleteNextWord(l *GoLine) (bool, error) {
+	end := findNextWord(l.CurLine, l.Position, l.Len)
+	copy(l.CurLine, append(l.CurLine[:l.Position], l.CurLine[end:l.Len]...))
+	l.Len -= end - l.Position
+	return false, nil
+}
+
+func DeleteCurrentChar(l *GoLine) (bool, error) {
+	if l.Position < l.Len {
+		l.CurLine = append(l.CurLine[:l.Position], l.CurLine[l.Position+1:]...)
+		l.Len--
 	}
-	return DeleteLine(l)
+	return false, nil
 }
 
 func SwapWithPreviousChar(l *GoLine) (bool, error) {
