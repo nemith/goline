@@ -9,60 +9,53 @@ func UserTerminated(l *GoLine) (bool, error) {
 }
 
 func Backspace(l *GoLine) (bool, error) {
-	if l.Len > 0 && l.Pos > 0 {
-		l.CurLine = append(l.CurLine[:l.Pos-1], l.CurLine[l.Pos:]...)
+	if l.Len > 0 && l.Position > 0 {
+		l.CurLine = append(l.CurLine[:l.Position-1], l.CurLine[l.Position:]...)
 		l.Len--
-		l.Pos--
+		l.Position--
 		l.CurLine[l.Len] = 0
 	}
 	return false, nil
 }
 
 func MoveLeft(l *GoLine) (bool, error) {
-	if l.Pos > 0 {
-		l.Pos--
+	if l.Position > 0 {
+		l.Position--
 	}
 	return false, nil
-
 }
 
 func MoveRight(l *GoLine) (bool, error) {
-	if l.Pos != l.Len {
-		l.Pos++
+	if l.Position != l.Len {
+		l.Position++
 	}
 	return false, nil
-
 }
 
 func DeleteLine(l *GoLine) (bool, error) {
 	l.CurLine = make([]rune, MAX_LINE)
-	l.Pos = 0
+	l.Position = 0
 	l.Len = 0
 	return false, nil
-
 }
 
 func DeleteRestofLine(l *GoLine) (bool, error) {
-	copy(l.CurLine, l.CurLine[:l.Pos])
-	l.Len = l.Pos
+	copy(l.CurLine, l.CurLine[:l.Position])
+	l.Len = l.Position
 	return false, nil
-
 }
 
 func MoveStartofLine(l *GoLine) (bool, error) {
-	l.Pos = 0
+	l.Position = 0
 	return false, nil
-
 }
 
 func MoveEndofLine(l *GoLine) (bool, error) {
-	l.Pos = l.Len
+	l.Position = l.Len
 	return false, nil
-
 }
 
 func ClearScreen(l *GoLine) (bool, error) {
 	l.ClearScreen()
 	return false, nil
-
 }

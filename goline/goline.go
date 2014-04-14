@@ -34,11 +34,12 @@ type Handler func(*GoLine) (bool, error)
 type GoLine struct {
 	tty            *Tty
 	prompter       Prompter
-	Handlers       map[rune]Handler
+	runeHandlers   map[rune]Handler
+	escapeHandlers map[escapeCode]Handler
 	DefaultHandler Handler
 	LastPrompt     string
 	CurLine        []rune
-	Pos            int
+	Position       int
 	Len            int
 }
 
@@ -47,9 +48,10 @@ type GoLine struct {
 func NewGoLine(p Prompter) *GoLine {
 	tty, _ := NewTty(syscall.Stdin)
 	l := &GoLine{
-		tty:      tty,
-		Handlers: make(map[rune]Handler),
-		prompter: p}
+		tty:            tty,
+		runeHandlers:   make(map[rune]Handler),
+		escapeHandlers: make(map[escapeCode]Handler),
+		prompter:       p}
 
 	l.AddHandler(CHAR_ENTER, Finish)
 	l.AddHandler(CHAR_CTRLC, UserTerminated)
@@ -61,6 +63,9 @@ func NewGoLine(p Prompter) *GoLine {
 	l.AddHandler(CHAR_CTRLF, MoveRight)
 	l.AddHandler(CHAR_CTRLA, MoveStartofLine)
 	l.AddHandler(CHAR_CTRLE, MoveEndofLine)
+
+	l.AddHandler(ESCAPE_LEFT, MoveLeft)
+	l.AddHandler(ESCAPE_RIGHT, MoveRight)
 
 	//Edit
 	l.AddHandler(CHAR_CTRLL, ClearScreen)
@@ -85,24 +90,24 @@ func (l *GoLine) RefreshLine() {
 	// Erase to right
 	l.tty.Write([]byte("\x1b[0K"))
 
-	// Move cursor back to original position including the prompt
-	pos := l.Pos + len(l.LastPrompt)
-	l.tty.Write([]byte(fmt.Sprintf("\x1b[0G\x1b[%dC", pos)))
+	// Move cursor back to original Position including the prompt
+	position := l.Position + len(l.LastPrompt)
+	l.tty.Write([]byte(fmt.Sprintf("\x1b[0G\x1b[%dC", position)))
 }
 
 // Inserts the unicode character r at the current position on the line
 func (l *GoLine) Insert(r rune) {
-	if l.Len == l.Pos {
-		l.CurLine[l.Pos] = r
-		l.Pos++
+	if l.Len == l.Position {
+		l.CurLine[l.Position] = r
+		l.Position++
 		l.Len++
 		//	l.tty.Write([]byte{c})
 		l.RefreshLine()
 	} else {
 		n := len(l.CurLine)
-		copy(l.CurLine[l.Pos+1:n], l.CurLine[l.Pos:n])
-		l.CurLine[l.Pos] = r
-		l.Pos++
+		copy(l.CurLine[l.Position+1:n], l.CurLine[l.Position:n])
+		l.CurLine[l.Position] = r
+		l.Position++
 		l.Len++
 	}
 }
@@ -115,17 +120,31 @@ func (l *GoLine) ClearScreen() {
 // Add a custom handler function to be invoked when rune r is encontered.
 //
 // Function is passed a pointer to the current GoLine to be able to read or
-// modify the current buffer, cursor position, or length
+// modify the current buffer, cursor Position, or length
 //
 // Custom handlers are evaulated before built-in functions which allows you to
 // override built-in functionality
-func (l *GoLine) AddHandler(r rune, f Handler) {
-	l.Handlers[r] = f
+func (l *GoLine) AddHandler(t interface{}, f Handler) {
+	switch t := t.(type) {
+	case byte, rune:
+		l.runeHandlers[t.(rune)] = f
+	case escapeCode:
+		l.escapeHandlers[t] = f
+	default:
+		fmt.Printf("Bleh value is: %T\n", t)
+	}
 }
 
 // Removes a handler with rune of r
-func (l *GoLine) RemoveHanlder(r rune) {
-	delete(l.Handlers, r)
+func (l *GoLine) RemoveHanlder(t interface{}) {
+	switch t := t.(type) {
+	case byte, rune:
+		delete(l.runeHandlers, t.(rune))
+	case escapeCode:
+		delete(l.escapeHandlers, t)
+	default:
+		panic("Unknown handler type.")
+	}
 }
 
 // Print the current prompt and handle each character as it received from
@@ -144,22 +163,36 @@ func (l *GoLine) Line() (string, error) {
 	defer l.tty.DisableRawMode()
 
 	l.Len = 0
-	l.Pos = 0
+	l.Position = 0
 	l.CurLine = make([]rune, MAX_LINE)
 
 	for {
 		r, _ := l.tty.ReadRune()
 
-		if f, found := l.Handlers[r]; found {
+		var handler Handler
+
+		if r == CHAR_ESCAPE {
+			code, err := l.tty.ReadChars(2)
+			if err != nil {
+				return "", err // TODO: hanlde better?
+			}
+			if f, found := l.escapeHandlers[escapeCode(code)]; found {
+				handler = f
+			}
+		} else if f, found := l.runeHandlers[r]; found {
+			handler = f
+		} else {
+			l.Insert(r)
+		}
+
+		if handler != nil {
 			l.tty.DisableRawMode()
-			stop, err := f(l)
+			stop, err := handler(l)
 			l.tty.EnableRawMode()
 
 			if stop || err != nil {
 				return string(l.CurLine[:l.Len]), err
 			}
-		} else {
-			l.Insert(r)
 		}
 		l.RefreshLine()
 	}

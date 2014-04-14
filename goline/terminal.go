@@ -9,26 +9,28 @@ import (
 
 // ASCII codes for comonly used control characters
 const (
-	CHAR_CTRLA     = 1
-	CHAR_CTRLB     = 2
-	CHAR_CTRLC     = 3
-	CHAR_CTRLE     = 5
-	CHAR_CTRLF     = 6
-	CHAR_CTRLH     = 8
-	CHAR_CTRLK     = 11
-	CHAR_CTRLL     = 12
-	CHAR_ENTER     = 13
-	CHAR_CTRLU     = 21
-	CHAR_CTRLW     = 23
-	CHAR_ESCAPE    = 27
-	CHAR_BACKSPACE = 127
+	CHAR_CTRLA     rune = 1
+	CHAR_CTRLB     rune = 2
+	CHAR_CTRLC     rune = 3
+	CHAR_CTRLE     rune = 5
+	CHAR_CTRLF     rune = 6
+	CHAR_CTRLH     rune = 8
+	CHAR_CTRLK     rune = 11
+	CHAR_CTRLL     rune = 12
+	CHAR_ENTER     rune = 13
+	CHAR_CTRLU     rune = 21
+	CHAR_CTRLW     rune = 23
+	CHAR_ESCAPE    rune = 27
+	CHAR_BACKSPACE rune = 127
 )
 
-// Commonly used escape codes with out the escape character
+type escapeCode string
+
+// Commonly used escape codes without the escape character
 const (
-	ESCAPE_UP    = "[A"
-	ESCAPE_RIGHT = "[C"
-	ESCAPE_LEFT  = "[D"
+	ESCAPE_UP    escapeCode = "[A"
+	ESCAPE_RIGHT escapeCode = "[C"
+	ESCAPE_LEFT  escapeCode = "[D"
 )
 
 // Get the current Termios via syscall for the given terminal at the file
