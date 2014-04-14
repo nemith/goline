@@ -14,13 +14,6 @@ Very alpha quality right now.  API _will_ change.
 
 See examples folder for examples API implementations
 
-Features
---------
-* Support for SSH transport using go.crypto/ssh. (Other transports are planned)
-* Built in RPC support (in progress)
-* Support for custom RPCs
-* Independant of XML library.  Free to choose encoding/xml or another third party library to parse the results.
-
 Documentation
 -------------
 Latest documentation can always be found at [http://godoc.org/github.com/nemith/go-goline/goline](http://godoc.org/github.com/nemith/go-goline/goline)
