@@ -20,6 +20,7 @@ const (
 	CHAR_ENTER     rune = 13
 	CHAR_CTRLN     rune = 14
 	CHAR_CTRLP     rune = 16
+	CHAR_CTRLT     rune = 20
 	CHAR_CTRLU     rune = 21
 	CHAR_CTRLW     rune = 23
 	CHAR_ESCAPE    rune = 27

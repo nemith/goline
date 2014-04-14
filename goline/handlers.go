@@ -57,6 +57,20 @@ func DeleteLastWord(l *GoLine) (bool, error) {
 	return DeleteLine(l)
 }
 
+func SwapWithPreviousChar(l *GoLine) (bool, error) {
+	if l.Position > 0 && l.Position <= l.Len {
+		x := l.Position
+		if l.Position == l.Len {
+			x--
+		}
+		l.CurLine[x], l.CurLine[x-1] = l.CurLine[x-1], l.CurLine[x]
+		if l.Position != l.Len {
+			l.Position++
+		}
+	}
+	return false, nil
+}
+
 func MoveStartofLine(l *GoLine) (bool, error) {
 	l.Position = 0
 	return false, nil
