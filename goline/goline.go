@@ -77,6 +77,8 @@ func NewGoLine(p Prompter) *GoLine {
 	l.AddHandler(ESCAPE_ALT_SHIFT_BACKSPACE, DeleteLastWord)
 	l.AddHandler(CHAR_CTRLW, DeleteLastWord)
 
+	SetupHistory(l)
+
 	//	l.DefaultHandler = DefaultHandler
 	return l
 }
@@ -102,7 +104,7 @@ func (l *GoLine) RefreshLine() {
 }
 
 // Inserts the unicode character r at the current position on the line
-func (l *GoLine) Insert(r rune) {
+func (l *GoLine) InsertRune(r rune) {
 	if l.Len == l.Position {
 		l.CurLine[l.Position] = r
 		l.Position++
@@ -188,7 +190,7 @@ func (l *GoLine) Line() (string, error) {
 		} else if f, found := l.runeHandlers[r]; found {
 			handler = f
 		} else {
-			l.Insert(r)
+			l.InsertRune(r)
 		}
 
 		if handler != nil {
