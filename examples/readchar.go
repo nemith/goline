@@ -13,7 +13,7 @@ func main() {
 	defer tty.DisableRawMode()
 
 	for {
-		c, _ := tty.ReadChar()
+		c, _ := tty.ReadRune()
 		switch c {
 		case goline.CHAR_CTRLC:
 			return

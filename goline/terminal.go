@@ -29,8 +29,11 @@ type escapeCode string
 // Commonly used escape codes without the escape character
 const (
 	ESCAPE_UP    escapeCode = "[A"
+	ESCAPE_DOWN  escapeCode = "[B"
 	ESCAPE_RIGHT escapeCode = "[C"
 	ESCAPE_LEFT  escapeCode = "[D"
+	ESCAPE_END   escapeCode = "[F"
+	ESCAPE_HOME  escapeCode = "[H"
 )
 
 // Get the current Termios via syscall for the given terminal at the file

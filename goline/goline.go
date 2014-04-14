@@ -66,6 +66,8 @@ func NewGoLine(p Prompter) *GoLine {
 
 	l.AddHandler(ESCAPE_LEFT, MoveLeft)
 	l.AddHandler(ESCAPE_RIGHT, MoveRight)
+	l.AddHandler(ESCAPE_HOME, MoveStartofLine)
+	l.AddHandler(ESCAPE_END, MoveEndofLine)
 
 	//Edit
 	l.AddHandler(CHAR_CTRLL, ClearScreen)
