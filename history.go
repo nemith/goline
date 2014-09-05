@@ -9,9 +9,10 @@ type History struct {
 
 func (h *History) PreviousHistory(l *GoLine) (bool, error) {
 	if h.curIndex > 0 {
-		l.CurLine = h.history[h.curIndex-1]
-		l.Position = len(l.CurLine)
-		l.Len = len(l.CurLine)
+		line := h.history[h.curIndex-1]
+		l.CurLine = line[:MAX_LINE]
+		l.Position = len(line)
+		l.Len = len(line)
 		h.curIndex--
 	}
 	return false, nil
@@ -19,9 +20,10 @@ func (h *History) PreviousHistory(l *GoLine) (bool, error) {
 
 func (h *History) NextHistory(l *GoLine) (bool, error) {
 	if h.curIndex < len(h.history)-1 {
-		l.CurLine = h.history[h.curIndex+1]
-		l.Position = len(l.CurLine)
-		l.Len = len(l.CurLine)
+		line := h.history[h.curIndex+1]
+		l.CurLine = line[:MAX_LINE]
+		l.Position = len(line)
+		l.Len = len(line)
 		h.curIndex++
 	} else if h.curIndex == len(h.history)-1 {
 		return DeleteLine(l)
